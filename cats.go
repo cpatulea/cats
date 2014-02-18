@@ -10,9 +10,14 @@ import (
   "fmt"
   "math/rand"
   "strconv"
+  "sync"
+  "time"
 )
 
 var imgsRe *regexp.Regexp
+var mu sync.Mutex
+var nextUpdate time.Time
+var imgs [][]byte
 
 func init() {
   imgsRe = regexp.MustCompile(`http://i.imgur.com/[^"]{5,20}`)
@@ -20,36 +25,47 @@ func init() {
 
 type server struct{}
 
+func maybeUpdateImgs() ([][]byte, error) {
+  mu.Lock()
+  defer mu.Unlock()
+
+  if time.Now().After(nextUpdate) {
+    req, err := http.NewRequest("GET", "http://www.reddit.com/r/catpictures/hot.json", nil)
+    if err != nil {
+      return nil, err
+    }
+
+    req.Header.Add("User-Agent", "cats.go 0.1 (contact /u/eigma or cronos586@gmail.com)")
+    resp, err := (&http.Client{}).Do(req)
+    if err != nil {
+      return nil, err
+    }
+
+    defer resp.Body.Close()
+    body, err := ioutil.ReadAll(resp.Body)
+    if err != nil {
+      return nil, err
+    }
+
+    newImgs := imgsRe.FindAll(body, -1)
+    if len(newImgs) == 0 {
+      return nil, err
+    }
+
+    imgs = newImgs
+    nextUpdate = time.Now().Add(1 * time.Second)
+  }
+
+  return imgs, nil
+}
+
 func (s server) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
   rw.Header().Set("Content-Type", "text/html")
 
-  req, err := http.NewRequest("GET", "http://www.reddit.com/r/catpictures/hot.json", nil)
-  if err != nil {
-    log.Print(err)
-    rw.Write([]byte(err.Error()))
-    return
-  }
-
-  req.Header.Add("User-Agent", "cats.go 0.1 (contact /u/eigma or cronos586@gmail.com)")
-  resp, err := (&http.Client{}).Do(req)
-  if err != nil {
-    log.Print(err)
-    rw.Write([]byte(err.Error()))
-    return
-  }
-
-  defer resp.Body.Close()
-  body, err := ioutil.ReadAll(resp.Body)
-  if err != nil {
-    log.Print(err)
-    rw.Write([]byte(err.Error()))
-    return
-  }
-
-  imgs := imgsRe.FindAll(body, -1)
-  if len(imgs) == 0 {
-    log.Print("no imgs")
-    rw.Write([]byte("no imgs"))
+  imgs, e := maybeUpdateImgs()
+  if e != nil {
+    log.Print(e)
+    rw.Write([]byte(e.Error()))
     return
   }
 
