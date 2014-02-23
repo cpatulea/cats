@@ -52,6 +52,7 @@ func maybeUpdateImgs() ([][]byte, error) {
 			return nil, err
 		}
 
+		newImgs = append(newImgs, []byte("http://i.imgur.com/iHzbXfL.jpg"))
 		imgs = newImgs
 		nextUpdate = time.Now().Add(1 * time.Second)
 	}
