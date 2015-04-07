@@ -73,7 +73,7 @@ func (s server) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	img := imgs[rand.Intn(len(imgs))]
 	html := fmt.Sprintf(
 		"<title>um, cats</title>"+
-			"<body background=http://162.243.219.187/static/bg.jpg>"+
+			"<body background=http://104.131.51.57/static/bg.jpg>"+
 			"<div align=center>"+
 			"<img style=\"max-width: 90%%; max-height: 80%%\" src=\"%s\"/>"+
 			"</div>", img)
