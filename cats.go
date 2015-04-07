@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -49,12 +50,13 @@ func maybeUpdateImgs() ([][]byte, error) {
 
 		newImgs := imgsRe.FindAll(body, -1)
 		if len(newImgs) == 0 {
-			return nil, err
+			log.Printf("No cat pictures found: %s: %s", resp, body)
+			return nil, errors.New("No cat pictures found")
 		}
 
 		newImgs = append(newImgs, []byte("http://i.imgur.com/iHzbXfL.jpg"))
 		imgs = newImgs
-		nextUpdate = time.Now().Add(1 * time.Second)
+		nextUpdate = time.Now().Add(2 * time.Second)
 	}
 
 	return imgs, nil
