@@ -31,7 +31,7 @@ func maybeUpdateImgs() ([][]byte, error) {
 	defer mu.Unlock()
 
 	if time.Now().After(nextUpdate) {
-		req, err := http.NewRequest("GET", "http://www.reddit.com/r/catpictures/hot.json", nil)
+		req, err := http.NewRequest("GET", "http://www.reddit.com/r/catpics/hot.json", nil)
 		if err != nil {
 			return nil, err
 		}
