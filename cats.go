@@ -24,8 +24,6 @@ func init() {
 	imgsRe = regexp.MustCompile(`http://i.imgur.com/[^"]{5,20}`)
 }
 
-type server struct{}
-
 func maybeUpdateImgs() ([][]byte, error) {
 	mu.Lock()
 	defer mu.Unlock()
@@ -62,13 +60,28 @@ func maybeUpdateImgs() ([][]byte, error) {
 	return imgs, nil
 }
 
-func (s server) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
+func serveUrl(rw http.ResponseWriter, r *http.Request) {
+	rw.Header().Set("Content-Type", "text/plain")
+
+	imgs, e := maybeUpdateImgs()
+	if e != nil {
+		log.Print(e)
+		http.Error(rw, e.Error(), 503)
+		return
+	}
+
+	img := imgs[rand.Intn(len(imgs))]
+	rw.Header().Set("Content-Length", strconv.Itoa(len(img)))
+	rw.Write([]byte(img))
+}
+
+func serveRoot(rw http.ResponseWriter, r *http.Request) {
 	rw.Header().Set("Content-Type", "text/html")
 
 	imgs, e := maybeUpdateImgs()
 	if e != nil {
 		log.Print(e)
-		rw.Write([]byte(e.Error()))
+		http.Error(rw, e.Error(), 503)
 		return
 	}
 
@@ -84,13 +97,16 @@ func (s server) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+	http.HandleFunc("/url", serveUrl)
+	http.HandleFunc("/", serveRoot)
+
 	l, e := net.Listen("tcp", "127.0.0.1:9000")
 	if e != nil {
 		log.Fatal(e)
 	}
 
 	log.Print("serving")
-	e = fcgi.Serve(l, &server{})
+	e = fcgi.Serve(l, nil)
 	if e != nil {
 		log.Fatal(e)
 	}
