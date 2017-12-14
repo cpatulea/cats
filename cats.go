@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"log/syslog"
 	"math/rand"
 	"net"
 	"net/http"
@@ -21,7 +22,7 @@ var nextUpdate time.Time
 var imgs [][]byte
 
 func init() {
-	imgsRe = regexp.MustCompile(`http://i.imgur.com/[^"]{5,20}`)
+	imgsRe = regexp.MustCompile(`(http://i.imgur.com/[^"]{5,20}|https://i.redditmedia.com/[^"]+\?s=[^"]+)`)
 }
 
 func maybeUpdateImgs() ([][]byte, error) {
@@ -97,6 +98,11 @@ func serveRoot(rw http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+	logger, e := syslog.New(syslog.LOG_NOTICE | syslog.LOG_DAEMON, "cats")
+	if e != nil {
+		log.Fatal(e)
+	}
+	log.SetOutput(logger)
 	http.HandleFunc("/url", serveUrl)
 	http.HandleFunc("/", serveRoot)
 
