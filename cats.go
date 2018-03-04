@@ -22,7 +22,7 @@ var nextUpdate time.Time
 var imgs [][]byte
 
 func init() {
-	imgsRe = regexp.MustCompile(`(http://i.imgur.com/[^"]{5,20}|https://i.redditmedia.com/[^"]+\?s=[^"]+)`)
+	imgsRe = regexp.MustCompile(`(http://i.imgur.com/[^"]{5,20}|https://i.redditmedia.com/[^"]+\?s=[^"]+)|https://i.redd.it/[0-9a-z.]{10,30}`)
 }
 
 func maybeUpdateImgs() ([][]byte, error) {
@@ -90,7 +90,7 @@ func serveRoot(rw http.ResponseWriter, r *http.Request) {
 	html := fmt.Sprintf(
 		"<title>um, cats</title>"+
 			"<body background=http://104.131.51.57/static/bg.jpg>"+
-			"<div align=center>"+
+			"<div align=center style=\"width: 100%%; height: 100%%\">"+
 			"<img style=\"max-width: 90%%; max-height: 80%%\" src=\"%s\"/>"+
 			"</div>", img)
 	rw.Header().Set("Content-Length", strconv.Itoa(len(html)))
