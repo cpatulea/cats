@@ -14,6 +14,7 @@ import (
 	"strconv"
 	"sync"
 	"time"
+	_ "net/http/pprof"
 )
 
 var imgsRe *regexp.Regexp
