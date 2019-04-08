@@ -9,7 +9,6 @@ import (
 	"math/rand"
 	"net"
 	"net/http"
-	"net/http/fcgi"
 	"regexp"
 	"strconv"
 	"sync"
@@ -107,13 +106,13 @@ func main() {
 	http.HandleFunc("/url", serveUrl)
 	http.HandleFunc("/", serveRoot)
 
-	l, e := net.Listen("tcp", "127.0.0.1:9000")
+	l, e := net.Listen("tcp", "127.0.0.1:8000")
 	if e != nil {
 		log.Fatal(e)
 	}
 
 	log.Print("serving")
-	e = fcgi.Serve(l, nil)
+	e = http.Serve(l, nil)
 	if e != nil {
 		log.Fatal(e)
 	}
